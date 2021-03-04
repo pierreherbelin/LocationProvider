@@ -10,10 +10,13 @@ import android.location.LocationListener
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Looper
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.kraker.locationprovider.LocationUtils.Companion.LOCATION_REQUEST_CODE
 import com.kraker.locationprovider.LocationUtils.Companion.isGooglePlayServicesAvailable
 import kotlinx.android.synthetic.main.activity_main.*
@@ -118,19 +121,18 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun requestLocationUsingFusedLocationProvider() {
-        val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        if (!gpsEnabled) {
-            val settingsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            startActivity(settingsIntent)
-        } else {
-            locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    10000L,
-                    10F,
-                    mLocationListener
-            )
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        val locationRequest = LocationRequest.create().apply {
+            interval = 10000
+            fastestInterval = 10000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            mLocationCallback,
+            Looper.getMainLooper()
+        )
     }
 
     private fun displayLocation(location: Location?, source: String) {
